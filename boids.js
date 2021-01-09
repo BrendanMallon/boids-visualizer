@@ -2,12 +2,15 @@ let width = 100;
 let height = 100;
 
 const sizeOfFlock = 1000;
-const perceptionRange = 50;
+const perceptionRange = 30;
 
 var flock = [];
 
 function spawn() {
+  let count = 0;
+  count++;
   for (let i = 0; i < sizeOfFlock; i++) {
+    count++;
     // Random angle [0,2PI) for random unit vector generation
     let a = Math.random() * Math.PI;
     flock.push({
@@ -15,8 +18,10 @@ function spawn() {
       y: Math.random() * height,
       dx: Math.random() * Math.cos(a) * 2,
       dy: Math.random() * Math.sin(a) * 2,
-      size: Math.floor(Math.random() * 6 + 1),
+      size: true ? count : Math.floor(Math.random() * 5 + 1),
     });
+
+    count %= 5;
   }
 }
 
@@ -42,13 +47,16 @@ function isSeen(boid1, boid2, range) {
  * @return {array} array of nearby boids
  */
 function getNearbyBoids(boid, range) {
-  temp = [];
-  for (let i = 0; i < flock.length; i++) {
-    if (boid != flock[i] && isSeen(boid, flock[i], range)) {
-      temp.push(flock[i]);
+  let temp = quadTree.query(
+    new Rectangle(boid.x - range, boid.y - range, 2 * range, 2 * range)
+  );
+  let result = [];
+  for (let i = 0; i < temp.length; i++) {
+    if (boid != temp[i] && isSeen(boid, temp[i], range)) {
+      result.push(temp[i]);
     }
   }
-  return temp;
+  return result;
 }
 
 function sizeCanvas() {
@@ -106,7 +114,7 @@ function cohesion(boid) {
 function separate(boid) {
   const serparationStrength = 0.01;
   let sepVelocity = { dx: 0, dy: 0 };
-  let nearbyBoids = getNearbyBoids(boid, perceptionRange * 0.5);
+  let nearbyBoids = getNearbyBoids(boid, perceptionRange * 0.75);
   for (let other of nearbyBoids) {
     sepVelocity.dx += boid.x - other.x;
     sepVelocity.dy += boid.y - other.y;
@@ -143,7 +151,7 @@ function align(boid) {
  * @param boid
  */
 function limitSpeed(boid) {
-  const speedLimit = 5;
+  const speedLimit = -0.5 * boid.size + 4;
   const speed = Math.sqrt(boid.dx * boid.dx + boid.dy * boid.dy);
   if (speed > speedLimit) {
     boid.dx = (boid.dx / speed) * speedLimit;
@@ -181,8 +189,14 @@ function pause() {
   paused = !paused;
 }
 
+var quadTree;
+
 function animationLoop() {
   if (!paused) {
+    quadTree = new QuadTree(new Rectangle(0, 0, width, height), 20);
+    for (let boid of flock) {
+      quadTree.insert(new Point(boid.x, boid.y, boid));
+    }
     for (let boid of flock) {
       // FLOCKING ALGORITHM
       cohesion(boid);
@@ -195,11 +209,28 @@ function animationLoop() {
       boid.x += boid.dx;
       boid.y += boid.dy;
     }
+
     const ctx = document.getElementById("boids").getContext("2d");
     ctx.clearRect(0, 0, width, height);
+    //quadTree.drawDivides(ctx);
     for (let boid of flock) {
       drawBoid(ctx, boid);
     }
+    //console.log(quadTree);
+    /*
+    let b = flock[0];
+    let temp = getNearbyBoids(b, perceptionRange);
+    ctx.strokeStyle = "#fff";
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, perceptionRange, 0, 2 * Math.PI);
+    ctx.stroke();
+    for (let p of temp) {
+      ctx.beginPath();
+      ctx.fillStyle = "#ff0000";
+      ctx.arc(p.x, p.y, 5, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    */
   }
 
   window.requestAnimationFrame(animationLoop);
