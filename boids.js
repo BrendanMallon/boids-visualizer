@@ -165,7 +165,7 @@ function limitSpeed(boid) {
  * @param boid
  */
 function drawBoid(ctx, boid) {
-  const angle = Math.atan2(boid.dy, boid.dx);
+  const angle = Math.fatan2(boid.dy, boid.dx);
   ctx.translate(boid.x, boid.y);
   ctx.rotate(angle);
   ctx.translate(-boid.x, -boid.y);
