@@ -151,7 +151,7 @@ function align(boid) {
  * @param boid
  */
 function limitSpeed(boid) {
-  const speedLimit = -0.5 * boid.size + 4;
+  const speedLimit =  .5 * boid.size;
   const speed = Math.sqrt(boid.dx * boid.dx + boid.dy * boid.dy);
   if (speed > speedLimit) {
     boid.dx = (boid.dx / speed) * speedLimit;
@@ -165,7 +165,7 @@ function limitSpeed(boid) {
  * @param boid
  */
 function drawBoid(ctx, boid) {
-  const angle = Math.fatan2(boid.dy, boid.dx);
+  const angle = Math.atan2(boid.dy, boid.dx);
   ctx.translate(boid.x, boid.y);
   ctx.rotate(angle);
   ctx.translate(-boid.x, -boid.y);
